@@ -1,0 +1,242 @@
+# Amazon Web Services Command Line Interface
+This is a basic introduction to using Amazon Web Services CLI **s3**
+
+**Note**
+This guide assumes you have a AWS account and also have AWS CLI installed on your local dev machine and have access to your AWS account through it. I also assume you have used AWS prior to using the CLI tool.
+
+If you have not used Amazon Web Services or you don't have the AWS CLI  installed on your machine then you need to head over to the [getting setup guide](http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-set-up.html) for specific steps to getting setup correctly.
+
+## What is AWS CLI?
+AWS CLI is a command line interface tool. It's **really** awesome because it grants you access to interact with all our AWS services directly from the command line. Thus saving time from logging onto the AWS console which in turn makes you more time efficient.
+
+## Using AWS CLI command structure
+AWS CLI uses a multipart structure on the command line. The structure starts off with a base call to `aws`. The next call is to a top-level command which is often a AWS service such as `s3`. Each service has additional sub-commands that specify the option to perform.
+
+One of the cool thing's with the command structure is that general cli options or specific parameters for an operation can be specified in any order you wish.
+
+`$ aws <command> <subcommand> [options and parameters]`
+
+Parameters can also take various types of input value's such as numbers, strings, lists, maps, and JSON
+
+## Getting help on AWS CLI
+When you need help learning about a command on the fly.
+
+`$ aws help`
+
+If I wanted help with s3  commands then I would run the `$ aws s3 help` and inside of my terminal I will get helpful information based on AWS S3 services.
+
+Say I want to get a little more **detailed** help with a service's commands. Well then I'd run this line.
+
+` $ aws s3api put-object-act help`
+
+Don't worry about what that line is doing. I'm just demonstrating that you can run help commands on services and commands to get a little more information on the command that you are referencing.  
+
+### AWS CLI Reference Document
+
+Reference to s3 commands (same as help file but in browser)
+[s3](http://docs.aws.amazon.com/cli/latest/reference/s3/index.html)
+
+# Using High-Level S3 commands to interact with s3 services (basic commands)
+
+So we know how the command structure works and we know how to get help. Awesome but what would all of this be without any practical application of working with AWS through the CLI.
+
+## Managing Buckets
+
+### Listing Buckets
+
+List all the buckets in s3.
+
+`$ aws s3 ls`
+
+### Listing objects inside of a bucket
+List all the objects and folders inside of a bucket with
+
+`$ aws s3 ls s3://bucket-name`
+
+### Creating a Bucket
+Create a bucket with the `mb` command
+
+`$ aws mb s3:// bucket-name`
+
+`bucket-name` is the name of your bucket..Whatever that may be.
+
+### Removing a Bucket
+Remove a **empty** bucket with the `rb` command
+
+`$ aws s3 rb s3://bucket-name`
+
+### Removing a Bucket with objects inside
+
+You cannot remove buckets that already contain objects inside it unless you use the `--force` command like so
+
+`$ aws s3 rb s3://bucket-name --force`
+
+## Managing Objects
+When managing s3 objects the commands include `aws s3 cp, aws s3 ls, aws s3 mv, aws s3 rm`, and `sync`. The `cp`, `ls`, `mv`, and `rm` commands enable you to seamlessly work across your local directories and Amazon S3 buckets. The `sync` command synchronizes the contents of a bucket and a directory, or two buckets.
+
+`cp, mv` and `sync` commands include a `--grants` option that is used to grant permissions on the object to specified users or groups
+
+To set the `--grants` option to a list of permissions use this syntax
+```
+--grants Permission=Grantee_Type=Grantee_ID
+        [Permission=Grantee_Type=Grantee_ID ...]
+```         
+
+* `Permission` - Specifies the granted permissions, and can be set to `read`, `readacl`, `writeacl`, or `full`.
+
+* `Grantee_Type` – Specifies how the grantee is to be identified, and can be set to `uri`, `emailaddress`, or `id`.
+
+* Grantee_ID – Specifies the grantee based on Grantee_Type.
+ * `uri` – The group's URI. For more information, see Who Is a Grantee?
+ * `emailaddress` – The account's email address.
+ * `id` – The account's canonical ID.
+
+This example copies an object into a bucket while grating `read` permissions on the object to everyone and `full` permissions (`read`, `readacl`, and `writeacl`) to the account associated with `user@example.com`.
+
+`$ aws s3 cp file.txt s3://my-bucket/ --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers full=emailaddress=user@example.com
+`
+
+## Syncing files with s3
+
+- Local file system to S3
+- Amazon S3 to local file
+- Amazon S3 to Amazon S3
+
+The `sync` command works as follows
+
+`$ aws s3 sync <source> <target> [--options]`
+
+The example here synchronizes a folder in s3 named `s3Folder` with `my-bucket` with the all contents of the current directory.
+
+`$ aws s3 snyc . sync s3://my-bucket/s3Folder`
+
+You can also use `sync` to `--delete` files or objects from the target bucket
+
+### Sync with deletion of `textfile.txt`
+`$ aws s3 sync . s3://my-bucket/textfile.txt --delete`
+
+### Sync with deletion of `s3Folder`
+`$ aws s3 sync . s3://my-bucket/s3Folder --delete`
+Delete's all the folder `s3Folder` and all the contents of it.
+
+Or you can just **remove** object from folder with `rm`
+$ aws s3 rm s3://my-bucket/s3Folder/textfile.txt
+
+### Including and Excluding files during sync
+By default when syncing to s3 all items  **included** in a `sync` so if you want to exclude a few items then you'll need to use the `--exclude` option
+
+Inside our local directory we have two text tiles and three csv files.
+```
+/someFolder1
+file1.txt
+file2.txt
+file3.csv
+file4.csv
+file5.csv
+```
+Say I want to `--exclude` all the `.csv` files from `sync`. I can achieve this by running the command `--exclude '*.csv'`
+
+`$ aws s3 sync . s3://my-bucket --exclude '*.csv'`
+
+All `.txt` files will be synced and `.csv` files will be excluded
+
+Or what about `--excluding` all files except for a jpg file named `coolcat.jpg` inside of `someFolder2`
+```
+/someFolder2
+* hello.txt
+* goodbye.txt
+* plans.pdf
+* coolcat.jpg
+```
+This command excludes all files expect for `coolcat.jpg`
+
+`$ aws s3 sync . s3://my-bucket/someFolder2 -- exclude '*' --include 'coolcat.jpg'`
+
+
+### Delete option on sync command
+
+I can also use the `--delete` option to sync deleted files in a bucket
+
+### Delete `file1.txt` from bucket
+
+`$ aws s3 rm s3://my-bucket/someFolder1/file1.txt `
+
+### Sync bucket with delete excluding `file.txt`
+
+`$ aws s3 sync s3://my-bucket . --delete --exclude 'file1.txt' `
+
+If you'd like to see more examples then head over to the user guide
+
+## Setting access permissions in s3 with the --acl option on `sync` command
+When syncing a new file or files up to s3 the `--acl` option gives the option to make your files `private, public-read` and `public-read-write`
+
+**NOTE**
+The `--acl` option is only available on `sync` command
+
+### Allowing public-read access to files synced to `my-bucket/myFolder`
+`$ aws s3 sync --acl public-read . s3://my-bucket/coolcat.jpg`
+
+### Change existing object access rights
+To update an exiting object's permissions you need to use s3api commands and options.
+
+Here we will use the command `put-object-acl` which uses the acl sub-resource to get the access control list (ACL) permissions for an object that already exists in a bucket.  
+
+[put-object-acl](http://docs.aws.amazon.com/cli/latest/reference/s3api/put-object-acl.html)
+
+`$ aws s3api put-object-acl --bucket my-bucket --key coolcat.jpg --acl public-read `
+
+`coolcat.jpg` access rights have changed to `public-read`
+
+## Getting signed s3 access url's from AWS
+So I want to retrieve a signed access url (link) to my `coolcat.jpg`.  Dose AWS ClI have a command that allows me to retrieve my coolcat.jpg singed access url?
+
+Well unfortunately there is not a command at the moment the comes with AWS CLI to retrieve the access url to `coolcat.jpg`. :cry: :unamused:
+
+Don't cry though because after searching around a bit I found a [solution](https://github.com/aws/aws-cli/issues/462) that works! You just need to write small python script that connects to boto-core (AWS CLI is built on boto).
+
+I'm not going to get into the technicality's of how this all works but I will walk you through using the script to retrieve urls.
+
+If you're already using AWS CLI then you have python installed on your machine. However you still need to get boto on your machine to make the script connect to AWS.
+
+## Setup
+
+So in your terminal type
+`$ sudo pip install boto`
+
+Once you have boto installed then in your terminal create a file named  
+`$ touch boto-get-signed-url.py`
+
+open `boto-get-signed-url.py` in your fav text editor
+
+**Paste this script in your editor**
+
+```python
+#!/usr/bin/python
+import boto
+import argparse
+
+parser = argparse.ArgumentParser(description='Generate an S3 signed URL')
+parser.add_argument('-b', '--bucket', help='bucket name')
+parser.add_argument('-k', '--key', help='prefix/key')
+parser.add_argument('-s', '--seconds', type=int, help='time in seconds until the URL will expire')
+args = parser.parse_args()
+
+s3 = boto.connect_s3()
+bucket = s3.get_bucket(args.bucket)
+key = bucket.get_key(args.key)
+if bucket.get_key(args.key):
+  print key.generate_url(args.seconds)
+else:
+  print 's3://' + args.bucket + '/' + args.key + ' does not exist'
+```
+## Usage  
+Before you can call the script you need to run this command `chmod +x boto-get-signed-url.py` which grants you access to using the script.
+
+Inside the directory you synced the file in run the `boto-get-signed-url.py` script with `-b, -k, -s` arguments `-b` bucket `-k` key `-s` seconds  
+
+`$ ../boto/get-signed-url.py -b my-bucket -key coolcat.jpg -s 60`
+
+Access url to the  [coolcat.jpg](https://designdiagrams.s3.amazonaws.com/coolcat.jpg)
+
+## Using s3api commands to interact with s3 services
+Coming soon!
