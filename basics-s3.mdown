@@ -154,18 +154,14 @@ This command excludes all files expect for `coolcat.jpg`
 
 If you'd like to know more about the `sync` command the checkout the [sync command](http://docs.aws.amazon.com/cli/latest/reference/s3/sync.html?highlight=sync) in the AWS CLI reference
 
-### Delete option on sync command
-
-I can also use the `--delete` option to sync deleted files in a bucket
-
-### Delete a object from bucket
+### Remove an object from a bucket  
 By using the `rm` command you can delete a single object within the bucket.
 
 `$ aws s3 rm s3://my-bucket/someFolder1/file1.txt `
 
 Removing a object from `someFolder1`
 
-### Deleting multiple objects inside a bucket
+### Remove multiple objects from a bucket
 You can delete multiple files inside of your bucket by using the `rm` command together with the `--recursive` parameter. This will remove all objects inside of the bucket.
 
 `aws s3 rm s3://my-bucket --recursive`
