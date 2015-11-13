@@ -158,8 +158,22 @@ This command excludes all files expect for `coolcat.jpg`
 I can also use the `--delete` option to sync deleted files in a bucket
 
 ### Delete `file1.txt` from bucket
+By using the `rm` command you can delete a single item.
 
 `$ aws s3 rm s3://my-bucket/someFolder1/file1.txt `
+
+### Deleting multiple files inside a bucket
+You can delete multiple files inside of your bucket by using the `rm` command together with the `--recursive` parameter. This will remove all objects inside of the bucket.
+
+`aws s3 rm s3://my-bucket --recursive`
+
+Say you wish to remove all objects within the bucket except for `.jpgs`. This is possible by passing the `-exclude` parameter
+
+`aws s3 rm s3://my-bucket --recursive --exclude '*.jpg'`
+
+Removes all objects except for `.jpgs`
+
+[rm command](http://docs.aws.amazon.com/cli/latest/reference/s3/rm.html)
 
 ### Sync bucket with delete excluding `file.txt`
 
